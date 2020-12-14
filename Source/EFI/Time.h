@@ -1,6 +1,6 @@
 #pragma once
 
-#include "EFI.h"
+#include "EFI/EFI.h"
 
 #define EFI_TIME_ADJUST_DAYLIGHT 0x01
 #define EFI_TIME_IN_DAYLIGHT 0x02

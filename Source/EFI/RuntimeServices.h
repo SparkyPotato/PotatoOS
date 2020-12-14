@@ -1,7 +1,7 @@
 #pragma once
 
-#include "EFI.h"
-#include "Time.h"
+#include "EFI/EFI.h"
+#include "EFI/Time.h"
 
 #define EFI_OPTIONAL_POINTER 0x00000001
 

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "EFI.h"
-#include "Protocol/SimpleTextInput.h"
-#include "Protocol/SimpleTextOutput.h"
-#include "RuntimeServices.h"
-#include "BootServices.h"
-#include "ConfigurationTable.h"
+#include "EFI/EFI.h"
+#include "EFI/Protocol/SimpleTextInput.h"
+#include "EFI/Protocol/SimpleTextOutput.h"
+#include "EFI/RuntimeServices.h"
+#include "EFI/BootServices.h"
+#include "EFI/ConfigurationTable.h"
 
 typedef struct EFI_SYSTEM_TABLE
 {

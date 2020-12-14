@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#define NULL 0
+
 #define EFI_FALSE 0
 #define EFI_TRUE 1
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "EFI.h"
-#include "Protocol/DevicePath.h"
+#include "EFI/EFI.h"
+#include "EFI/Protocol/DevicePath.h"
 
 #define EVT_TIMER 0x80000000
 #define EVT_RUNTIME 0x40000000
