@@ -8,8 +8,8 @@ OBJS = $(SOURCES:%.c=%.o)
 
 build: $(OBJS)
 	@echo Linking
-	@install -D /dev/null Binaries/Boot.efi
-	@cd Intermediate; lld-link-10 $(LLDFLAGS) $(OBJS) -out:../Binaries/Boot.efi
+	@mkdir -p $(shell dirname  Binaries/Boot.efi)
+	@cd Intermediate; lld-link $(LLDFLAGS) $(OBJS) -out:../Binaries/Boot.efi
 
 image: build
 	@echo Generating Image
@@ -27,5 +27,5 @@ run: image
 
 %.o: %.c
 	@echo $<
-	@install -D /dev/null Intermediate/$@
+	@mkdir -p $(shell dirname  Intermediate/$@)
 	@clang $(CFLAGS) -o Intermediate/$@ -c $<

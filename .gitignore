@@ -1,3 +1,7 @@
-# Build stuff
+# Build results
 Binaries/*
 Intermediate/*
+
+# Mac files
+*.Trashes
+*.DS_Store
