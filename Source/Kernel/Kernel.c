@@ -1,5 +1,6 @@
-int _KernelMain()
-{
-	return 0;
-}
+#include "Kernel/Graphics.h"
 
+int _KernelMain(int i)
+{
+	return i;
+}

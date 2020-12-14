@@ -1,8 +1,10 @@
+#include <stdint.h>
+
 #include "efi.h"
 #include "efilib.h"
 
-#include "Elf.h"
-#include <stdint.h>
+#include "Boot/Elf.h"
+#include "Boot/Graphics.h"
 
 int _fltused = 0;
 
@@ -84,8 +86,11 @@ EFI_STATUS _Boot(EFI_HANDLE imageHandle, EFI_SYSTEM_TABLE* systemTable)
 		}
 	}
 
-	int (*kernelMain)() = (int (*)())elfHeader.e_entry;
-	Print(L"%d\r\n", kernelMain());
+	int (*kernelMain)(int) = (int (*)(int))elfHeader.e_entry;
+	Framebuffer buffer = InitializeGraphics();
+
+	Print(L"Starting kernel.\r\n");
+	Print(L"%d\r\n", kernelMain(1));
 
 	return EFI_SUCCESS;
 }
