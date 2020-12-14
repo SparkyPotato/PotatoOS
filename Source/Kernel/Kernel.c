@@ -1,4 +1,4 @@
-int _KernelStart()
+int _KernelMain()
 {
 	return 0;
 }
