@@ -1,7 +1,7 @@
 #pragma
 
-#include <cstdint>
-#include <cstddef>
+#include <stdint.h>
+#include <stddef.h>
 
 struct Point
 {

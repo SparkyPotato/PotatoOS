@@ -6,6 +6,9 @@ TextRenderer::TextRenderer(Framebuffer* framebuffer, PSF1Font* font)
 
 void TextRenderer::PutChar(char c, uint32_t color)
 {
+	if (m_Cursor.Position.Y * 16 > m_Buffer->Height) { return; }
+	if (m_Cursor.Position.X * 8 > m_Buffer->Width) { return; }
+
 	if (c == '\n') { m_Cursor.Position.Y++; return; }
 	if (c == '\r') { m_Cursor.Position.X = 0; return; }
 
@@ -34,20 +37,11 @@ void TextRenderer::PutChar(char c, uint32_t color)
 	}
 }
 
-void TextRenderer::Print(uint32_t color, const char* str)
-{
-	while (*str != '\0')
-	{
-		PutChar(*str, color);
-		str++;
-	}
-}
-
 void TextRenderer::Print(const char *str)
 {
 	while (*str != '\0')
 	{
-		PutChar(*str, 0xffffffff);
+		PutChar(*str, m_Color);
 		str++;
 	}
 }

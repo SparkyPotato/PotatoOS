@@ -57,14 +57,30 @@ EFI_STATUS _Boot(EFI_HANDLE imageHandle, EFI_SYSTEM_TABLE* systemTable)
 	PSF1Font* font = LoadPSF1Font(dir, L"Font.psf", imageHandle, systemTable);
 	if (!font) { Print(L"Failed to load font!\r\n"); return 1; }
 
+	EFI_MEMORY_DESCRIPTOR* map = NULL;
+	UINTN key, descSize;
+	UINT32 descVersion;
+
+	systemTable->BootServices->GetMemoryMap(&size, map, &key, &descSize, &descVersion);
+	systemTable->BootServices->AllocatePool(EfiLoaderData, size, (void**)&map);
+	systemTable->BootServices->GetMemoryMap(&size, map, &key, &descSize, &descVersion);
+
 	struct
 	{
 		Framebuffer* Buffer;
 		PSF1Font* Font;
+		EFI_MEMORY_DESCRIPTOR* MemoryMap;
+		UINTN MapSize;
+		UINTN MapDescriptorSize;
 	} kernelArgs;
 	kernelArgs.Buffer = &buffer;
 	kernelArgs.Font = font;
+	kernelArgs.MemoryMap = map;
+	kernelArgs.MapSize = size;
+	kernelArgs.MapDescriptorSize = descSize;
 	
+	systemTable->BootServices->ExitBootServices(imageHandle, key);
+
 	// Since the MS ABI is used, the first (and only!) argument
 	// is passed on the RCX register.
 	kernelMain(&kernelArgs);
