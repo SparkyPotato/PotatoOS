@@ -1,9 +1,9 @@
 #include "efi.h"
 #include "efilib.h"
 
-#include "Boot/Elf.h"
-#include "Boot/File.h"
-#include "Boot/Graphics.h"
+#include "Elf.h"
+#include "File.h"
+#include "Graphics.h"
 
 int _fltused = 0;
 

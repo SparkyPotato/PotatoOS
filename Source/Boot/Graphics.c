@@ -1,9 +1,9 @@
-#include "Boot/Graphics.h"
+#include "Graphics.h"
 
 #include "efi.h"
 #include "efilib.h"
 
-#include "Boot/File.h"
+#include "File.h"
 
 Framebuffer InitializeGraphics()
 {

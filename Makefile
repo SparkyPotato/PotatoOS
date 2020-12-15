@@ -1,8 +1,8 @@
-BCFLAGS = -ISource -IDependencies/gnu-efi/inc -target x86_64-pc-win32-coff -fno-stack-protector -fshort-wchar -mno-red-zone
+BCFLAGS = -ISource/Boot -IDependencies/gnu-efi/inc -target x86_64-pc-win32-coff -fno-stack-protector -fshort-wchar -mno-red-zone
 BLDFLAGS = -subsystem:efi_application -nodefaultlib -dll -entry:_Boot
 
 LDSCRIPT = Kernel.ld
-KCFLAGS = -ISource -target x86_64-unknown-linux-gnu -fshort-wchar -mno-red-zone
+KCFLAGS = -ISource/Kernel -target x86_64-unknown-linux-gnu -fshort-wchar -mno-red-zone
 KLDFLAGS = -T $(LDSCRIPT) -static -Bsymbolic -nostdlib
 
 rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
@@ -13,8 +13,8 @@ BOBJS = $(BSOURCES:%.c=Intermediate/%.o)
 EFISOURCES := $(call rwildcard, Dependencies/gnu-efi, *.c)
 EFIOBJS = $(EFISOURCES:%.c=Intermediate/%.o)
 
-KSOURCES := $(call rwildcard, Source/Kernel, *.c)
-KOBJS = $(KSOURCES:%.c=Intermediate/%.o)
+KSOURCES := $(call rwildcard, Source/Kernel, *.cpp)
+KOBJS = $(KSOURCES:%.cpp=Intermediate/%.o)
 
 bootloader : $(EFIOBJS) $(BOBJS)
 	@echo Linking bootloader
@@ -52,7 +52,7 @@ Intermediate/Dependencies/gnu-efi/%.o : Dependencies/gnu-efi/%.c
 	@mkdir -p $(shell dirname $@)
 	@clang $(BCFLAGS) -o $@ -c $<
 	
-Intermediate/Source/Kernel/%.o : Source/Kernel/%.c
+Intermediate/Source/Kernel/%.o : Source/Kernel/%.cpp
 	@echo $<
 	@mkdir -p $(shell dirname $@)
-	@clang $(KCFLAGS) -o $@ -c $<
+	@clang++ $(KCFLAGS) -o $@ -c $<
