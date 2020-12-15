@@ -13,6 +13,8 @@ class TextRenderer
 public:
     TextRenderer(Framebuffer* framebuffer, PSF1Font* font);
 
+    void Clear();
+
     void PutChar(char c, uint32_t color);
     void Print(const char* str);
 

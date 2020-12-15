@@ -5,3 +5,6 @@ Intermediate/*
 # Mac files
 *.Trashes
 *.DS_Store
+
+# Visual Studio files
+.vs

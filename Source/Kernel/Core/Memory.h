@@ -2,25 +2,30 @@
 
 #include <stdint.h>
 
+#include "Core/Bitmap.h"
+
 struct MemoryDescriptor
 {
-    uint32_t Type;
-    void* PhysicalAddress;
-    void* VirtualAddress;
-    uint64_t PageCount;
-    uint64_t Attributes;
+	uint32_t Type;
+	void* PhysicalAddress;
+	void* VirtualAddress;
+	uint64_t PageCount;
+	uint64_t Attributes;
 };
 
 extern const char* MemoryMapTypes[];
 
-class Memory
+namespace Memory
 {
-public:
-    Memory(uint8_t* descriptor, uint64_t size, uint64_t descSize);
+void Initialize(uint8_t* descriptor, uint64_t size, uint64_t descSize);
 
-    uint64_t GetTotalMemory() { return m_TotalMemory; }
-    uint64_t GetAvailableMemory() { return m_AvailableMemory; }
+uint64_t GetTotalMemory();
+uint64_t GetUsedMemory();
+uint64_t GetReservedMemory();
 
-private:
-    uint64_t m_TotalMemory = 0, m_AvailableMemory = 0;
+void* GetPage();
+void FreePage(void* page);
+
+void LockPages(void* address, uint64_t pages = 1);
+void FreePages(void* address, uint64_t pages = 1);
 };

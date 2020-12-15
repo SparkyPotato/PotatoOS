@@ -4,6 +4,18 @@ TextRenderer::TextRenderer(Framebuffer* framebuffer, PSF1Font* font)
 	: m_Buffer(framebuffer), m_Font(font), m_Color(0xffffffff)
 {}
 
+void TextRenderer::Clear()
+{
+	uint32_t* pixel = (uint32_t*)m_Buffer->BaseAddress;
+	for (uint32_t y = 0; y < m_Buffer->Height; y++)
+	{
+		for (uint32_t x = 0; x < m_Buffer->Width; x++)
+		{
+			*(uint32_t*)(pixel + x + y * m_Buffer->Stride) = 0xff000000;
+		}
+	}
+}
+
 void TextRenderer::PutChar(char c, uint32_t color)
 {
 	if (m_Cursor.Position.Y * 16 + 16 > m_Buffer->Height) { return; }

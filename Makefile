@@ -18,8 +18,8 @@ KOBJS = $(KSOURCES:%.cpp=Intermediate/%.o)
 
 bootloader : $(EFIOBJS) $(BOBJS)
 	@echo Linking bootloader
-	@mkdir -p $(shell dirname Binaries/Boot/Boot.efi)
-	@lld-link $(BLDFLAGS) $(BOBJS) $(EFIOBJS) -out:"Binaries/Boot/Boot.efi"
+	@mkdir -p $(shell dirname Binaries/Boot/BootX64.efi)
+	@lld-link $(BLDFLAGS) $(BOBJS) $(EFIOBJS) -out:"Binaries/Boot/BootX64.efi"
 
 kernel : $(KOBJS)
 	@echo Linking kernel
@@ -28,19 +28,18 @@ kernel : $(KOBJS)
 
 image :
 	@echo Generating Image
-	@dd if=/dev/zero of=Binaries/PotatoOS.img bs=512 count=93750
-	@mformat -i Binaries/PotatoOS.img -f 1440 ::
-	@mmd -i Binaries/PotatoOS.img ::/EFI
-	@mmd -i Binaries/PotatoOS.img ::/EFI/BOOT
-	@mcopy -i Binaries/PotatoOS.img Binaries/Boot/Boot.efi ::/EFI/BOOT
-	@mcopy -i Binaries/PotatoOS.img OVMF/startup.nsh ::
-	@mmd -i Binaries/PotatoOS.img ::/Kernel
-	@mcopy -i Binaries/PotatoOS.img Binaries/Kernel/Kernel.elf ::/Kernel
-	@mmd -i Binaries/PotatoOS.img ::/Content
-	@mcopy -i Binaries/PotatoOS.img Content/Font.psf ::/Content
+	@dd if=/dev/zero of=Binaries/PotatoOS.iso bs=512 count=93750
+	@mformat -i Binaries/PotatoOS.iso -f 1440 ::
+	@mmd -i Binaries/PotatoOS.iso ::/EFI
+	@mmd -i Binaries/PotatoOS.iso ::/EFI/BOOT
+	@mcopy -i Binaries/PotatoOS.iso Binaries/Boot/BootX64.efi ::/EFI/BOOT
+	@mmd -i Binaries/PotatoOS.iso ::/Kernel
+	@mcopy -i Binaries/PotatoOS.iso Binaries/Kernel/Kernel.elf ::/Kernel
+	@mmd -i Binaries/PotatoOS.iso ::/Content
+	@mcopy -i Binaries/PotatoOS.iso Content/Font.psf ::/Content
 
 run :
-	@qemu-system-x86_64 -drive file=Binaries/PotatoOS.img,format=raw -m 256M -cpu qemu64 -drive if=pflash,format=raw,unit=0,file="OVMF/OVMFCode.fd",readonly=on -net none
+	@qemu-system-x86_64 -drive file=Binaries/PotatoOS.iso,format=raw -m 256M -cpu qemu64 -drive if=pflash,format=raw,unit=0,file="OVMF/OVMFCode.fd",readonly=on -net none
 
 Intermediate/Source/Boot/%.o : Source/Boot/%.c
 	@echo $<

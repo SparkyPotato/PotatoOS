@@ -69,40 +69,40 @@ template <>
 class Formatter<int64_t>
 {
 public:
-    static const char *Format(int64_t value);
+    static const char* Format(int64_t value);
 };
 
 template <>
 class Formatter<int32_t>
 {
 public:
-    static const char *Format(int32_t value);
+    static const char* Format(int32_t value);
 };
 
 template <>
 class Formatter<int16_t>
 {
 public:
-    static const char *Format(int16_t value);
+    static const char* Format(int16_t value);
 };
 
 template <>
 class Formatter<int8_t>
 {
 public:
-    static const char *Format(int8_t value);
+    static const char* Format(int8_t value);
 };
 
 template <>
 class Formatter<double>
 {
 public:
-    static const char *Format(double value);
+    static const char* Format(double value);
 };
 
 template <>
 class Formatter<float>
 {
 public:
-    static const char *Format(float value);
+    static const char* Format(float value);
 };
