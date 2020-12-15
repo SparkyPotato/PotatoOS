@@ -1,13 +1,13 @@
 #include "Text/TextRenderer.h"
 
 TextRenderer::TextRenderer(Framebuffer* framebuffer, PSF1Font* font)
-	: m_Buffer(framebuffer), m_Font(font)
+	: m_Buffer(framebuffer), m_Font(font), m_Color(0xffffffff)
 {}
 
 void TextRenderer::PutChar(char c, uint32_t color)
 {
-	if (m_Cursor.Position.Y * 16 > m_Buffer->Height) { return; }
-	if (m_Cursor.Position.X * 8 > m_Buffer->Width) { return; }
+	if (m_Cursor.Position.Y * 16 + 16 > m_Buffer->Height) { return; }
+	if (m_Cursor.Position.X * 8 + 8 > m_Buffer->Width) { return; }
 
 	if (c == '\n') { m_Cursor.Position.Y++; return; }
 	if (c == '\r') { m_Cursor.Position.X = 0; return; }
