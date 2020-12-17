@@ -41,17 +41,14 @@ image :
 run :
 	@qemu-system-x86_64 -drive file=Binaries/PotatoOS.iso,format=raw -m 256M -cpu qemu64 -drive if=pflash,format=raw,unit=0,file="OVMF/OVMFCode.fd",readonly=on -net none
 
-Intermediate/Source/Boot/%.o : Source/Boot/%.c
-	@echo $<
-	@mkdir -p $(shell dirname $@)
-	@clang $(BCFLAGS) -o $@ -c $<
-
-Intermediate/Dependencies/gnu-efi/%.o : Dependencies/gnu-efi/%.c
-	@echo $<
-	@mkdir -p $(shell dirname $@)
-	@clang $(BCFLAGS) -o $@ -c $<
-	
 Intermediate/Source/Kernel/%.o : Source/Kernel/%.cpp
 	@echo $<
 	@mkdir -p $(shell dirname $@)
-	@clang++ $(KCFLAGS) -o $@ -c $<
+	@clang++ -MMD $(KCFLAGS) -o $@ -c $<
+
+Intermediate/%.o : %.c
+	@echo $<
+	@mkdir -p $(shell dirname $@)
+	@clang -MMD $(BCFLAGS) -o $@ -c $<
+	
+-include Intermediate/*.d
