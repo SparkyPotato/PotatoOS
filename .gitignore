@@ -1,10 +1,9 @@
 # Build results
-Binaries/*
-Intermediate/*
+target/*
 
 # Mac files
 *.Trashes
 *.DS_Store
 
 # Visual Studio files
-.vs
+.vscode

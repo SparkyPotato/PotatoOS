@@ -1,0 +1,11 @@
+[package]
+name = "KernelBase"
+version = "0.1.0"
+authors = ["SparkyPotato"]
+edition = "2018"
+
+[[bin]]
+name = "KernelBase"
+path = "Source/Main.rs"
+
+[dependencies]
