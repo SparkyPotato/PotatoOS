@@ -1,17 +1,28 @@
 #![allow(non_snake_case)]
-#![no_std]
+#![feature(asm)]
 #![no_main]
+#![no_std]
+
+mod Debug;
 
 use core::panic::PanicInfo;
+
+use Debug::VGABuffer::{ Color, ColorCode, DebugSetColor };
 
 #[no_mangle]
 pub extern fn _start() -> !
 {
+	DebugPrintLn!("Hello, World!");
+	DebugSetColor(ColorCode::New(Color::Cyan, Color::Black));
+	DebugPrintLn!("Bye, World!");
+	
 	loop {}
 }
 
 #[panic_handler]
-fn RustPanicHandler(_info: &PanicInfo) -> !
+fn RustPanicHandler(info: &PanicInfo) -> !
 {
+	DebugPrintLn!("{}", info);
 	loop {}
 }
+

@@ -30,7 +30,10 @@ def BuildModule(module, mode):
 	os.chdir(module)
 	args = ["cargo", "build"]
 	if mode == "release": args.append("--release")
-	subprocess.run(args)
+	completed = subprocess.run(args)
+	if completed.returncode != 0:
+		print(f"error: failed to build module '{module}'")
+		exit(1)
 	os.chdir("..")
 
 def VerifyComponents(components):
