@@ -1,9 +1,3 @@
-# Build results
-target/*
-
-# Mac files
-*.Trashes
-*.DS_Store
-
-# Visual Studio files
+/target
+.idea
 .vscode

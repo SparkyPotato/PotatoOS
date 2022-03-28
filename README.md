@@ -1,19 +1,11 @@
 # PotatoOS
-A small, experimental, UEFI OS written in Rust.
 
-## Building
-### The kernel and bootloader
-Prerequisites:  
-1. Rust (and Cargo) installed, and in your path.
-2. The `rust-src` component installed: `rustup component add rust-src`.
-3. The `llvm-tools-preview` component installed: `rustup component add llvm-tools-preview`.
-4. Bootimage installed: `cargo install bootimage`.
+An 'operating system' for people who love potatoes.
 
-Building:
-Just call `cargo bootimage`.
+## Building and Testing
 
-## Running
-Prerequisites:
-1. QEMU installed and in your PATH.
+Since operating systems and EFI are slightly more complex than a simple executable, 
+we need `cargo-xtask` to make building easy.
 
-Then just call `cargo run`.
+Run `cargo xtask build` to build the OS to `target/debug/boot`.
+The folder can be put into a FAT32 formatted drive and booted on a real machine or QEMU.
