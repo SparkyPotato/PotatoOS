@@ -4,5 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+common = { path = "../common" }
+
 anyhow = "1.0.51"
-clap = { version = "3.0.13", features = ["derive"] }
+clap = { version = "4.0.29", features = ["derive"] }
+fatfs = "0.3.5"
+gpt = "3.0.0"

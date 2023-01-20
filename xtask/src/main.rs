@@ -1,61 +1,97 @@
 use std::process::Command;
 
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use clap::Parser;
 
-use crate::opts::{Action, BuildOpt, Opts};
+use crate::{
+	disk::Disk,
+	opts::{Action, BuildOpt, Opts},
+	target::CargoExecutor,
+};
 
+mod disk;
 mod opts;
+mod target;
 
-fn build(opts: BuildOpt) -> Result<()> {
-	let mut cmd = Command::new(std::env::var("CARGO").unwrap());
-	cmd.arg("build");
+pub struct BuildContext {
+	disk: Disk,
+	executor: CargoExecutor,
+}
 
-	if opts.release {
-		cmd.arg("--release");
+impl BuildContext {
+	fn new(opts: BuildOpt) -> Self {
+		let executor = CargoExecutor::new(opts);
+		let disk = Disk::new(&executor.target, &executor.opts).unwrap();
+		Self { disk, executor }
 	}
 
-	cmd.args(&[
-		"--target",
-		"x86_64-unknown-uefi",
-		"-Zbuild-std=core,compiler_builtins,alloc",
-		"-Zbuild-std-features=compiler-builtins-mem",
-	]);
+	fn build(&mut self) -> Result<String> {
+		// Build and copy bootloader.
+		self.executor.pipeline(
+			"build",
+			&mut self.disk,
+			|path, disk| disk.copy_efi(path, "EFI/Boot/Bootx64.efi"),
+			|path, disk| Ok(disk.write_kernel(std::fs::read(path)?)),
+		)?;
 
-	cmd.args(&["--package", "bootloader"]);
-
-	let status = cmd.status().unwrap();
-	if !status.success() {
-		bail!("build bootloader failed: {}", status);
+		self.disk.write()
 	}
 
-	let target = std::env::var("CARGO_TARGET_DIR").unwrap_or_else(|_| "target".into());
+	fn run(&mut self) -> Result<()> {
+		let disk = self.build()?;
 
-	std::fs::create_dir_all(format!(
-		"{}/{}/boot/EFI/Boot",
-		target,
-		if opts.release { "release" } else { "debug" }
-	))?;
+		let mut cmd = Command::new("qemu-system-x86_64");
+		if cfg!(target_os = "linux") {
+			cmd.arg("-enable-kvm");
+		}
 
-	std::fs::copy(
-		format!(
-			"{}/x86_64-unknown-uefi/{}/bootloader.efi",
-			target,
-			if opts.release { "release" } else { "debug" }
-		),
-		format!(
-			"{}/{}/boot/EFI/Boot/Bootx64.efi",
-			target,
-			if opts.release { "release" } else { "debug" }
-		),
-	)?;
+		// OVMF
+		std::env::var("OVMF")
+			.map(|ovmf| {
+				cmd.args(&[
+					"-drive",
+					&format!("if=pflash,format=raw,readonly=on,file={}/OVMF_CODE.fd", ovmf),
+				]);
+				cmd.args(&["-drive", &format!("if=pflash,format=raw,file={}/OVMF_VARS.fd", ovmf)]);
+			})
+			.map_err(|_| {
+				anyhow!(
+					"`OVMF` environment variable not set, set to a directory containing `OVMF_CODE.fd` and \
+					 `OVMF_VARS.fd`"
+				)
+			})?;
 
-	Ok(())
+		// Us
+		cmd.args(["-drive", format!("format=raw,file={}", disk).as_str()]);
+
+		match cmd.spawn() {
+			Ok(mut c) => {
+				let _ = c.wait();
+			},
+			Err(e) => {
+				if matches!(e.kind(), std::io::ErrorKind::NotFound) {
+					bail!("qemu-system-x86_64 not found in PATH, please install qemu");
+				} else {
+					bail!("failed to spawn qemu: {}", e);
+				}
+			},
+		}
+
+		Ok(())
+	}
 }
 
 fn main() -> Result<()> {
 	let opts = Opts::parse();
 	match opts.action {
-		Action::Build(opts) => build(opts),
+		Action::Build(opts) => {
+			let _ = BuildContext::new(opts).build()?;
+			Ok(())
+		},
+		Action::Run(opts) => BuildContext::new(opts).run(),
+		Action::Check => {
+			let c = |_, _: &mut ()| Ok(());
+			CargoExecutor::new(BuildOpt { release: false }).pipeline("check", &mut (), c, c)
+		},
 	}
 }
