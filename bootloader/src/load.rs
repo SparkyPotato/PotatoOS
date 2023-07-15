@@ -1,28 +1,33 @@
-use common::{KERNEL_MEMORY_TYPE, POTATO_OS_PARTITION_TYPE_UUID_BYTES};
+use common::POTATO_OS_PARTITION_TYPE_UUID_BYTES;
 use uefi::{
 	proto::media::{block::BlockIO, partition::PartitionInfo},
 	table::{
-		boot::{AllocateType, MemoryType, SearchType},
+		boot::{MemoryType, SearchType},
 		Boot,
 		SystemTable,
 	},
 };
 
-use crate::println;
+use crate::{println, TABLE};
 
 /// The kernel loaded into memory.
 ///
 /// The kernel *does not* expect to be loaded into any specific location, so we just allocate pages directly from the
 /// UEFI firmware.
-pub struct LoadedKernel {
-	/// The memory address of the kernel.
-	pub address: u64,
-	/// The number of pages allocated for the kernel.
-	pub pages: u64,
+pub struct KernelElf {
 	pub data: &'static [u8],
 }
 
-pub fn load_kernel(table: &mut SystemTable<Boot>) -> LoadedKernel {
+impl Drop for KernelElf {
+	fn drop(&mut self) {
+		unsafe {
+			let table = (*TABLE.0.get()).as_mut().unwrap();
+			let _ = table.boot_services().free_pool(self.data.as_ptr() as _);
+		}
+	}
+}
+
+pub fn load_kernel(table: &mut SystemTable<Boot>) -> KernelElf {
 	let handles = table
 		.boot_services()
 		.locate_handle_buffer(SearchType::from_proto::<PartitionInfo>())
@@ -50,16 +55,11 @@ pub fn load_kernel(table: &mut SystemTable<Boot>) -> LoadedKernel {
 			let block_size = media.block_size();
 
 			let kernel_size = block_size as u64 * block_count;
-			println!("Kernel size: {}", kernel_size);
+			println!("Kernel file size: {}", kernel_size);
 
-			let count = kernel_size / 4096 + 1;
 			let memory = table
 				.boot_services()
-				.allocate_pages(
-					AllocateType::AnyPages,
-					MemoryType::custom(KERNEL_MEMORY_TYPE),
-					count as _,
-				)
+				.allocate_pool(MemoryType::LOADER_DATA, kernel_size as _)
 				.expect("Failed to allocate kernel memory");
 
 			let kernel = unsafe { core::slice::from_raw_parts_mut(memory as *mut u8, kernel_size as usize) };
@@ -67,11 +67,9 @@ pub fn load_kernel(table: &mut SystemTable<Boot>) -> LoadedKernel {
 				.read_blocks(media_id, 0, kernel)
 				.expect("Failed to read kernel");
 
-			return LoadedKernel {
-				address: memory,
-				pages: count,
-				data: kernel,
-			};
+			println!("Kernel loaded");
+
+			return KernelElf { data: kernel };
 		}
 	}
 

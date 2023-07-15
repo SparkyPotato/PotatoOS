@@ -25,7 +25,14 @@ impl Module {
 	pub fn target(&self) -> &'static str {
 		match self {
 			Module::Bootloader => "x86_64-unknown-uefi",
-			Module::Kernel => "x86_64-unknown-none",
+			Module::Kernel => "x86_64-kernel.json",
+		}
+	}
+
+	pub fn target_folder(&self) -> &'static str {
+		match self {
+			Module::Bootloader => "x86_64-unknown-uefi",
+			Module::Kernel => "x86_64-kernel",
 		}
 	}
 
@@ -33,6 +40,16 @@ impl Module {
 		match self {
 			Module::Bootloader => "bootloader.efi",
 			Module::Kernel => "kernel",
+		}
+	}
+
+	pub fn extra_args(&self) -> &'static [&'static str] {
+		match self {
+			Module::Bootloader => &[],
+			Module::Kernel => &[
+				"-Zbuild-std=core,compiler_builtins",
+				"-Zbuild-std-features=compiler-builtins-mem",
+			],
 		}
 	}
 }
@@ -59,6 +76,11 @@ impl CargoExecutor {
 			cmd.arg("--release");
 		}
 		cmd.args(&["--package", module.name(), "--target", module.target()]);
+		cmd.args(module.extra_args());
+		if what == "rustc" {
+			cmd.arg("--");
+			cmd.arg("-Cstrip=symbols");
+		}
 
 		let status = cmd.status().unwrap();
 		if !status.success() {
@@ -69,7 +91,7 @@ impl CargoExecutor {
 			format!(
 				"{}/{}/{}/{}",
 				self.target,
-				module.target(),
+				module.target_folder(),
 				self.opts.mode(),
 				module.output()
 			)

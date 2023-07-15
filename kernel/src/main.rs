@@ -4,9 +4,12 @@
 use core::fmt::Write;
 
 use common::{KernelEntry, KernelInfo};
+use uefi::table::runtime::ResetType;
 
-extern "sysv64" fn _start(mut info: KernelInfo) -> ! {
-	write!(info.table.stdout(), "Hello, world!").unwrap();
+#[no_mangle]
+extern "sysv64" fn _start(info: *mut KernelInfo) -> ! {
+	let info = unsafe { &mut *info };
+
 	loop {}
 }
 

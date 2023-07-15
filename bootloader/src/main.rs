@@ -20,13 +20,14 @@ fn main(handle: Handle, mut table: SystemTable<Boot>) -> Status {
 	enter(&mut table);
 
 	let kernel = load_kernel(&mut table);
-	let entry = parse_kernel(kernel);
+	let kernel = parse_kernel(&mut table, kernel);
 
-	println!("Kernel ready, exiting boot services");
-	// table.stdout().clear().unwrap();
-	// let (table, map) = table.exit_boot_services();
+	println!("Starting kernel");
+	table.stdout().clear().unwrap();
+	let (table, map) = table.exit_boot_services();
 
-	entry(KernelInfo { table })
+	let mut info = KernelInfo { table, map };
+	(kernel.entry)(&mut info)
 }
 
 fn enter(table: &mut SystemTable<Boot>) {
@@ -63,6 +64,7 @@ fn panic(info: &PanicInfo) -> ! {
 #[macro_export]
 macro_rules! println {
     ($($x:tt)*) => {
+		#[allow(unused_unsafe)]
 		unsafe {
 			use core::fmt::Write;
 			if let Some(ref mut table) = *crate::TABLE.0.get() {

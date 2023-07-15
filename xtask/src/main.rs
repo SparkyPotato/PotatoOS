@@ -28,7 +28,7 @@ impl BuildContext {
 	fn build(&mut self) -> Result<String> {
 		// Build and copy bootloader.
 		self.executor.pipeline(
-			"build",
+			"rustc",
 			&mut self.disk,
 			|path, disk| disk.copy_efi(path, "EFI/Boot/Bootx64.efi"),
 			|path, disk| Ok(disk.write_kernel(std::fs::read(path)?)),

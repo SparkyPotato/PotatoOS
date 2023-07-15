@@ -1,6 +1,6 @@
 #![no_std]
 
-use uefi::table::{Boot, SystemTable};
+use uefi::table::{boot::MemoryMap, Runtime, SystemTable};
 
 pub const POTATO_OS_PARTITION_TYPE_UUID_STR: &str = "64919c40-45f4-49f1-b911-a5c317b140eb";
 pub const POTATO_OS_PARTITION_TYPE_UUID_BYTES: [u8; 16] =
@@ -8,9 +8,10 @@ pub const POTATO_OS_PARTITION_TYPE_UUID_BYTES: [u8; 16] =
 
 pub const KERNEL_MEMORY_TYPE: u32 = 0x81234567;
 
-pub type KernelEntry = extern "sysv64" fn(KernelInfo) -> !;
+pub type KernelEntry = extern "sysv64" fn(*mut KernelInfo) -> !;
 
 #[repr(C)]
 pub struct KernelInfo {
-	pub table: SystemTable<Boot>,
+	pub table: SystemTable<Runtime>,
+	pub map: MemoryMap<'static>,
 }
