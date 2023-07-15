@@ -1,60 +1,32 @@
 #![no_main]
 #![no_std]
-#![feature(abi_efiapi)]
 
 use core::{cell::UnsafeCell, fmt::Write, panic::PanicInfo};
 
-use common::POTATO_OS_PARTITION_TYPE_UUID_BYTES;
-use uefi::{
-	prelude::*,
-	proto::media::{block::BlockIO, partition::PartitionInfo},
-	table::{boot::SearchType, runtime::ResetType},
-};
+use common::KernelInfo;
+use elf::parse_kernel;
+use uefi::{prelude::*, table::runtime::ResetType};
+
+use crate::load::load_kernel;
+
+mod elf;
+mod load;
+
+#[cfg(not(target_arch = "x86_64"))]
+compile_error!("Only x86_64 is supported");
 
 #[entry]
 fn main(handle: Handle, mut table: SystemTable<Boot>) -> Status {
 	enter(&mut table);
 
-	{
-		let handles = table
-			.boot_services()
-			.locate_handle_buffer(SearchType::from_proto::<PartitionInfo>())
-			.unwrap();
+	let kernel = load_kernel(&mut table);
+	let entry = parse_kernel(kernel);
 
-		for &handle in handles.handles() {
-			let partition_info = table
-				.boot_services()
-				.open_protocol_exclusive::<PartitionInfo>(handle)
-				.unwrap();
+	println!("Kernel ready, exiting boot services");
+	// table.stdout().clear().unwrap();
+	// let (table, map) = table.exit_boot_services();
 
-			if let Some(part) = partition_info
-				.gpt_partition_entry()
-				.filter(|x| x.partition_type_guid.0.to_bytes() == POTATO_OS_PARTITION_TYPE_UUID_BYTES)
-			{
-				println!("Found kernel partition");
-
-				if let Ok(block_io) = table.boot_services().open_protocol_exclusive::<BlockIO>(handle) {
-					let block_count = part.num_blocks().unwrap();
-					let start_block = part.starting_lba;
-					let kernel_size = block_size as u64 * block_count;
-
-					println!("Got Block IO");
-					let media = block_io.media();
-					let block_size = media.block_size();
-
-					println!("Kernel size: {}", kernel_size);
-				}
-
-				break;
-			}
-		}
-	}
-
-	println!("Error loading kernel");
-	table.boot_services().stall(10000000);
-	table
-		.runtime_services()
-		.reset(ResetType::Shutdown, Status::ABORTED, None)
+	entry(KernelInfo { table })
 }
 
 fn enter(table: &mut SystemTable<Boot>) {
@@ -63,7 +35,7 @@ fn enter(table: &mut SystemTable<Boot>) {
 	}
 
 	table.stdout().clear().unwrap();
-	println!("Bootloader initialized; loading kernel");
+	println!("Bootloader initialized");
 }
 
 struct SyncTable(UnsafeCell<Option<SystemTable<Boot>>>);
@@ -79,7 +51,7 @@ fn panic(info: &PanicInfo) -> ! {
 			table.boot_services().stall(10000000);
 			table
 				.runtime_services()
-				.reset(ResetType::Shutdown, Status::ABORTED, None);
+				.reset(ResetType::SHUTDOWN, Status::ABORTED, None);
 		}
 	}
 
@@ -92,7 +64,8 @@ fn panic(info: &PanicInfo) -> ! {
 macro_rules! println {
     ($($x:tt)*) => {
 		unsafe {
-			if let Some(ref mut table) = *TABLE.0.get() {
+			use core::fmt::Write;
+			if let Some(ref mut table) = *crate::TABLE.0.get() {
 				writeln!(table.stdout(), $($x)*).unwrap();
 			}
 		}

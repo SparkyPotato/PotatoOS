@@ -1,6 +1,6 @@
 use std::process::Command;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use clap::Parser;
 
 use crate::{
@@ -34,7 +34,7 @@ impl BuildContext {
 			|path, disk| Ok(disk.write_kernel(std::fs::read(path)?)),
 		)?;
 
-		self.disk.write()
+		self.disk.write().with_context(|| "failed to write disk image")
 	}
 
 	fn run(&mut self) -> Result<()> {

@@ -5,12 +5,14 @@ use std::{
 	path::Path,
 };
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use common::POTATO_OS_PARTITION_TYPE_UUID_STR;
 use fatfs::{Dir, FileSystem, FormatVolumeOptions, FsOptions, ReadWriteSeek};
 use gpt::{
+	disk::LogicalBlockSize,
 	mbr::ProtectiveMBR,
-	partition_types::{OperatingSystem, Type},
+	partition_types::{OperatingSystem, Type, EFI},
+	GptConfig,
 };
 
 use crate::opts::BuildOpt;
@@ -79,7 +81,11 @@ impl Disk {
 		// Generate GPT disk.
 		{
 			let kernel_size = self.kernel.len() as u64;
-			let size = 64 * KB + efi_size + kernel_size;
+			let min_size = 64 * KB + efi_size + kernel_size;
+			let block_size = LogicalBlockSize::Lb512;
+			let block_size_int = u64::from(block_size);
+			let block_count = min_size / block_size_int + 1;
+			let size = block_count * block_size_int;
 
 			let mut disk = OpenOptions::new()
 				.create(true)
@@ -89,18 +95,17 @@ impl Disk {
 				.open(&self.disk)?;
 			disk.set_len(size)?;
 
-			ProtectiveMBR::with_lb_size(u32::try_from(size / 512 - 1).unwrap_or(0xFF_FF_FF_FF))
+			ProtectiveMBR::with_lb_size(u32::try_from(block_count - 1).unwrap_or(0xffffffff))
 				.overwrite_lba0(&mut disk)?;
 
-			let block_size = gpt::disk::LogicalBlockSize::Lb512;
-			let mut gpt = gpt::GptConfig::new()
+			let mut gpt = GptConfig::new()
 				.writable(true)
 				.initialized(false)
 				.logical_block_size(block_size)
 				.create_from_device(Box::new(&mut disk), None)?;
 			gpt.update_partitions(Default::default())?;
 
-			let partition_id = gpt.add_partition("EFI", efi_size, gpt::partition_types::EFI, 0, None)?;
+			let partition_id = gpt.add_partition("EFI", efi_size, EFI, 0, None)?;
 			let partition = gpt.partitions().get(&partition_id).unwrap();
 			let efi_start_offset = partition.bytes_start(block_size)?;
 
@@ -117,11 +122,10 @@ impl Disk {
 			let partition = gpt.partitions().get(&partition_id).unwrap();
 			let boot_start_offset = partition.bytes_start(block_size)?;
 
-			gpt.write()?;
-
 			// Write partitions.
+			gpt.write().with_context(|| "failed to write GPT")?;
 			disk.seek(SeekFrom::Start(efi_start_offset))?;
-			std::io::copy(&mut efi_data.as_slice(), &mut disk)?;
+			disk.write_all(&efi_data)?;
 
 			disk.seek(SeekFrom::Start(boot_start_offset))?;
 			disk.write_all(&self.kernel)?;

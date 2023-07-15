@@ -1,9 +1,10 @@
 [package]
 name = "bootloader"
-version = "0.1.0"
+version = "0.0.0"
 edition = "2021"
 
 [dependencies]
 common = { path = "../common" }
 
-uefi = { version = "0.18.0" }
+elf = { version = "0.7.2", default-features = false }
+uefi = { version = "0.24.0" }

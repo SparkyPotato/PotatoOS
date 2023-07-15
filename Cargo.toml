@@ -1,9 +1,4 @@
 [workspace]
-members = [
-    "common",
+members = ["common", "bootloader", "kernel", "xtask"]
 
-    "bootloader",
-    "kernel",
-
-    "xtask",
-]
+resolver = "2"
