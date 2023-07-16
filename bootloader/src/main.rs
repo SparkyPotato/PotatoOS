@@ -4,16 +4,27 @@
 use core::{cell::UnsafeCell, fmt::Write, panic::PanicInfo};
 
 use common::KernelInfo;
-use elf::parse_kernel;
 use uefi::{prelude::*, table::runtime::ResetType};
 
-use crate::load::load_kernel;
+use crate::{elf::parse_kernel, load::load_kernel, stack::allocate_kernel_stack};
 
 mod elf;
 mod load;
+mod stack;
 
 #[cfg(not(target_arch = "x86_64"))]
 compile_error!("Only x86_64 is supported");
+
+// TODO:
+// - Init kcore page allocator.
+// - Init kcore page table manager.
+// - Generate page tables:
+//   - Runtime services
+//   - Identity map
+//   - Map kernel
+//   - Map kernel stack
+// - Enable paging
+// - Set UEFI virtual address map
 
 #[entry]
 fn main(handle: Handle, mut table: SystemTable<Boot>) -> Status {
@@ -21,13 +32,13 @@ fn main(handle: Handle, mut table: SystemTable<Boot>) -> Status {
 
 	let kernel = load_kernel(&mut table);
 	let kernel = parse_kernel(&mut table, kernel);
+	let stack = allocate_kernel_stack(&mut table);
 
-	println!("Starting kernel");
-	table.stdout().clear().unwrap();
 	let (table, map) = table.exit_boot_services();
 
-	let mut info = KernelInfo { table, map };
-	(kernel.entry)(&mut info)
+	let mut info = KernelInfo {};
+	// (kernel.entry)(&mut info)
+	loop {}
 }
 
 fn enter(table: &mut SystemTable<Boot>) {
@@ -47,17 +58,13 @@ static TABLE: SyncTable = SyncTable(UnsafeCell::new(None));
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
 	unsafe {
-		if let Some(ref mut table) = *TABLE.0.get() {
-			write!(table.stdout(), "{}", info).unwrap();
-			table.boot_services().stall(10000000);
-			table
-				.runtime_services()
-				.reset(ResetType::SHUTDOWN, Status::ABORTED, None);
-		}
-	}
-
-	loop {
-		core::hint::spin_loop();
+		// We can never panic before init.
+		let table = (&mut *TABLE.0.get()).as_mut().unwrap_unchecked();
+		write!(table.stdout(), "{}", info).unwrap();
+		table.boot_services().stall(10000000);
+		table
+			.runtime_services()
+			.reset(ResetType::SHUTDOWN, Status::ABORTED, None)
 	}
 }
 

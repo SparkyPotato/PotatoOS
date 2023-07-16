@@ -194,9 +194,6 @@ checksum = "acbf1af155f9b9ef647e42cdc158db4b64a1b61f743629225fde6f3e0be2a7c7"
 [[package]]
 name = "common"
 version = "0.0.0"
-dependencies = [
- "uefi",
-]
 
 [[package]]
 name = "core-foundation-sys"
@@ -337,11 +334,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "kernel"
+name = "kcore"
 version = "0.0.0"
 dependencies = [
  "common",
- "uefi",
 ]
 
 [[package]]
@@ -376,6 +372,13 @@ name = "once_cell"
 version = "1.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
+
+[[package]]
+name = "page"
+version = "0.0.0"
+dependencies = [
+ "uefi",
+]
 
 [[package]]
 name = "proc-macro2"

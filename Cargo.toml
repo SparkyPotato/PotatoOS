@@ -1,4 +1,4 @@
 [workspace]
-members = ["common", "bootloader", "kernel", "xtask"]
+members = ["common", "bootloader", "kcore", "page", "xtask"]
 
 resolver = "2"

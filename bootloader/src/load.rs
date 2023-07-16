@@ -10,10 +10,6 @@ use uefi::{
 
 use crate::{println, TABLE};
 
-/// The kernel loaded into memory.
-///
-/// The kernel *does not* expect to be loaded into any specific location, so we just allocate pages directly from the
-/// UEFI firmware.
 pub struct KernelElf {
 	pub data: &'static [u8],
 }

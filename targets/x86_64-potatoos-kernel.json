@@ -12,9 +12,17 @@
     "panic-strategy": "abort",
     "disable-redzone": true,
     "features": "-mmx,-sse,+soft-float",
+    "dynamic-linking": false,
+    "relocation-model": "pic",
+    "code-model": "kernel",
+    "exe-suffix": "",
+    "has-rpath": false,
+    "no-default-libraries": true,
+    "position-independent-executables": false,
     "pre-link-args": {
         "ld.lld": [
-            "--entry=_start"
+            "--gc-sections",
+            "--script=linker/x86_64-potatoos-kernel.ld"
         ]
     }
 }

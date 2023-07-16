@@ -11,42 +11,42 @@ macro_rules! f {
 
 pub enum Module {
 	Bootloader,
-	Kernel,
+	Kcore,
 }
 
 impl Module {
 	pub fn name(&self) -> &'static str {
 		match self {
 			Module::Bootloader => "bootloader",
-			Module::Kernel => "kernel",
+			Module::Kcore => "kcore",
 		}
 	}
 
 	pub fn target(&self) -> &'static str {
 		match self {
 			Module::Bootloader => "x86_64-unknown-uefi",
-			Module::Kernel => "x86_64-kernel.json",
+			Module::Kcore => "targets/x86_64-potatoos-kernel.json",
 		}
 	}
 
 	pub fn target_folder(&self) -> &'static str {
 		match self {
 			Module::Bootloader => "x86_64-unknown-uefi",
-			Module::Kernel => "x86_64-kernel",
+			Module::Kcore => "x86_64-potatoos-kernel",
 		}
 	}
 
 	pub fn output(&self) -> &'static str {
 		match self {
 			Module::Bootloader => "bootloader.efi",
-			Module::Kernel => "kernel",
+			Module::Kcore => "kcore",
 		}
 	}
 
 	pub fn extra_args(&self) -> &'static [&'static str] {
 		match self {
 			Module::Bootloader => &[],
-			Module::Kernel => &[
+			Module::Kcore => &[
 				"-Zbuild-std=core,compiler_builtins",
 				"-Zbuild-std-features=compiler-builtins-mem",
 			],
@@ -101,7 +101,7 @@ impl CargoExecutor {
 
 	pub fn pipeline<T>(&self, what: &str, ctx: &mut T, bootloader: f!(&mut T), kernel: f!(&mut T)) -> Result<()> {
 		self.run(Module::Bootloader, what, |path| bootloader(path, ctx))?;
-		self.run(Module::Kernel, what, |path| kernel(path, ctx))?;
+		self.run(Module::Kcore, what, |path| kernel(path, ctx))?;
 
 		Ok(())
 	}
