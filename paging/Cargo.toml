@@ -1,0 +1,10 @@
+[package]
+name = "paging"
+version = "0.0.0"
+edition = "2021"
+
+[features]
+init = ["dep:uefi"]
+
+[dependencies]
+uefi = { version = "0.24.0", optional = true }

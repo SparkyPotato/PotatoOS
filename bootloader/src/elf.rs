@@ -1,5 +1,5 @@
 use common::KernelEntry;
-use elf::{abi::PT_LOAD, endian::NativeEndian, ElfBytes};
+use elf::{endian::NativeEndian, ElfBytes};
 use uefi::table::{
 	boot::{AllocateType, MemoryType},
 	Boot,

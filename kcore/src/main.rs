@@ -1,14 +1,10 @@
 #![no_std]
 #![no_main]
 
-use common::{KernelEntry, KernelInfo};
+use common::KernelEntry;
 
 #[no_mangle]
-extern "sysv64" fn kinit(info: *mut KernelInfo) -> ! {
-	let info = unsafe { &mut *info };
-
-	loop {}
-}
+extern "sysv64" fn kinit() -> ! { loop {} }
 
 const _CONFIRM_ENTRY_TYPE: KernelEntry = kinit;
 

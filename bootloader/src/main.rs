@@ -3,12 +3,13 @@
 
 use core::{cell::UnsafeCell, fmt::Write, panic::PanicInfo};
 
-use common::KernelInfo;
+use paging::alloc::PhysicalPageAllocator;
 use uefi::{prelude::*, table::runtime::ResetType};
 
-use crate::{elf::parse_kernel, load::load_kernel, stack::allocate_kernel_stack};
+use crate::{elf::parse_kernel, fb::get_framebuffer, load::load_kernel, stack::allocate_kernel_stack};
 
 mod elf;
+mod fb;
 mod load;
 mod stack;
 
@@ -16,7 +17,6 @@ mod stack;
 compile_error!("Only x86_64 is supported");
 
 // TODO:
-// - Init kcore page allocator.
 // - Init kcore page table manager.
 // - Generate page tables:
 //   - Runtime services
@@ -33,11 +33,13 @@ fn main(handle: Handle, mut table: SystemTable<Boot>) -> Status {
 	let kernel = load_kernel(&mut table);
 	let kernel = parse_kernel(&mut table, kernel);
 	let stack = allocate_kernel_stack(&mut table);
+	let fb = get_framebuffer(&mut table);
 
+	// We're done with boot services, we just have to enable paging and jump to the kernel.
 	let (table, map) = table.exit_boot_services();
 
-	let mut info = KernelInfo {};
-	// (kernel.entry)(&mut info)
+	let page_alloc = PhysicalPageAllocator::init(map);
+
 	loop {}
 }
 

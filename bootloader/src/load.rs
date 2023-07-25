@@ -27,9 +27,9 @@ pub fn load_kernel(table: &mut SystemTable<Boot>) -> KernelElf {
 	let handles = table
 		.boot_services()
 		.locate_handle_buffer(SearchType::from_proto::<PartitionInfo>())
-		.unwrap();
+		.expect("Failed to get disks");
 
-	for &handle in handles.iter() {
+	for &handle in handles.into_iter() {
 		let partition_info = table
 			.boot_services()
 			.open_protocol_exclusive::<PartitionInfo>(handle)

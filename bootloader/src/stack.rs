@@ -10,11 +10,11 @@ pub fn allocate_kernel_stack(table: &mut SystemTable<Boot>) -> u64 {
 			uefi::table::boot::MemoryType::LOADER_DATA,
 			(KERNEL_STACK_SIZE / 4096) as usize,
 		)
-		.expect_success("Failed to allocate kernel stack");
+		.expect("Failed to allocate kernel stack");
 
 	unsafe {
-		core::ptr::write_bytes(stack_addr as *mut u8, 0, stack_size as _);
+		core::ptr::write_bytes(stack_addr as *mut u8, 0, KERNEL_STACK_SIZE as _);
 	}
 
-	stack_addr + stack_size
+	stack_addr + KERNEL_STACK_SIZE
 }

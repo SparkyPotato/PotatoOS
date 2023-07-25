@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 common = { path = "../common" }
+paging = { path = "../paging", features = ["init"] }
 
 elf = { version = "0.7.2", default-features = false }
-uefi = { version = "0.24.0" }
+uefi = "0.24.0"

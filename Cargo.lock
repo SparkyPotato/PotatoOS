@@ -102,6 +102,7 @@ version = "0.0.0"
 dependencies = [
  "common",
  "elf",
+ "paging",
  "uefi",
 ]
 
@@ -374,7 +375,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
 
 [[package]]
-name = "page"
+name = "paging"
 version = "0.0.0"
 dependencies = [
  "uefi",
